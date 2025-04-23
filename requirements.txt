@@ -1,3 +1,5 @@
 numpy
 pandas
 geopandas
+matplotlib
+pyarrow
