@@ -1,0 +1,17 @@
+FROM python:3.8.13
+
+ENV PYTHONPATH=$PYTHONPATH:/src/
+
+# Copy the requirements.txt file to the image
+COPY ./requirements.txt /src/requirements.txt
+
+WORKDIR /src
+
+# Install the dependencies
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# Copy the content of the current directory to the image
+COPY ./ /src/
+
+# Run the populate_db.py script
+CMD ["python", "/src/populate_db.py"] 

@@ -1,0 +1,29 @@
+FROM python:3.8.13 as base
+
+# Install system dependencies
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    vim \
+    wget \
+    curl
+
+# Setup paths
+ENV PYTHONPATH=$PYTHONPATH:/src/
+WORKDIR /src
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip3 install --no-deps -r requirements.txt
+RUN pip3 install scikit-learn pandas numpy joblib lightgbm xgboost redis
+
+# Copy source code
+COPY ./ /src/
+
+FROM base as test
+RUN ["pytest", "-v", "/src/tests"]
+
+FROM base as build
+ENTRYPOINT ["python3", "/src/ml_service.py"] 
