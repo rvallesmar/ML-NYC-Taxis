@@ -172,3 +172,17 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# files
+data/taxi_zones/taxi_zones.shx
+.gitignore
+data/taxi_zones/taxi_zones.shp.xml
+data/taxi_zones/taxi_zones.sbx
+data/taxi_zones/taxi_zones.sbn
+data/taxi_zones/taxi_zones.prj
+data/taxi_zones/taxi_zones.dbf
+data/.DS_Store
+.DS_Store
+
+# git ignore
+.gitignore
