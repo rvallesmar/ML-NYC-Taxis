@@ -3,3 +3,5 @@ pandas
 geopandas
 matplotlib
 pyarrow
+xgboost
+scikit-learn

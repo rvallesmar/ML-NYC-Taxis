@@ -74,7 +74,7 @@ URL = http://localhost:9090
 
 ### 1. Using Jupyter Notebooks
 
-The `notebooks/` directory contains Jupyter notebooks for data exploration and model experimentation:
+The following Jupyter notebooks contain data exploration and model experimentation:
 - `data_exploration.ipynb`: Analyze and visualize the dataset
 - `model_training.ipynb`: Prototype and evaluate ML models
 - `model_evaluation.ipynb`: Evaluate model performance and interpret results
@@ -82,7 +82,6 @@ The `notebooks/` directory contains Jupyter notebooks for data exploration and m
 To work with the notebooks:
 ```bash
 $ pip install jupyter
-$ cd notebooks
 $ jupyter notebook
 ```
 
