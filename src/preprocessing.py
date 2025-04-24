@@ -42,13 +42,19 @@ def preprocess_data(
     val_data = one_hot_enc.transform(working_val_df[['time_of_day']])
     test_data = one_hot_enc.transform(working_test_df[['time_of_day']])
 
+
+
     # 2
     # since we do not expect to have any null values in our dataset (its supposed to have been
     # previously cleaned), then we can just proceed to apply MinMax scaling to all of the columns
     scaler = MinMaxScaler()
 
-    train_scaled = scaler.fit_transform(train_data)
-    val_scaled = scaler.transform(val_data)
-    test_scaled = scaler.transform(test_data)
+    train_scaled = scaler.fit_transform(working_train_df.drop(columns=['time_of_day']))
+    val_scaled = scaler.transform(working_val_df.drop(columns=['time_of_day']))
+    test_scaled = scaler.transform(working_test_df.drop(columns=['time_of_day']))
 
-    return train_scaled, val_scaled, test_scaled
+    train = np.concatenate((train_scaled,train_data), axis=1)
+    val = np.concatenate((val_scaled,val_data), axis=1)
+    test = np.concatenate((test_scaled,test_data), axis=1)
+
+    return train, val, test
