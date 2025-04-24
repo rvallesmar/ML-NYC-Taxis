@@ -179,5 +179,7 @@ data/taxi_zones/taxi_zones.sbx
 data/taxi_zones/taxi_zones.sbn
 data/taxi_zones/taxi_zones.prj
 data/taxi_zones/taxi_zones.dbf
+data/taxi_zones/taxi_zones.shp
+data/taxi_zones/taxi_zones.shx
 data/.DS_Store
 .DS_Store

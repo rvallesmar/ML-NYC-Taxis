@@ -4,6 +4,33 @@ from sklearn.model_selection import train_test_split
 from src import config
 import os
 from pathlib import Path
+import requests
+
+def download_zones_data(url:str):
+    zip_url = url
+    save_folder = str(Path(__file__).parent.parent / "data/taxi_zones")
+    zip_filename = "zones.zip"
+    save_path = os.path.join(save_folder, zip_filename)
+
+    try:
+        response = requests.get(zip_url, stream=True)
+        response.raise_for_status()
+
+        
+        os.makedirs(save_folder, exist_ok=True)
+
+        
+        with open(save_path, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=8192):
+                file.write(chunk)
+
+        print(f"Zip file successfully downloaded from '{zip_url}' and saved to '{save_path}'")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading zip file from '{zip_url}': {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 
 def get_feature_target(
     dataset: pd.DataFrame
