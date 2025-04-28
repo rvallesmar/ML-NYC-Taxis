@@ -121,16 +121,16 @@ def clean_trip_data(filename) -> pd.DataFrame:
 
     # 2
     # drop the rows that contain negative values in their
-    # fare_amount, or that are equal to 0
-    idx_to_drop = df[(df['fare_amount'] < 1)].index
+    # fare_amount
+    idx_to_drop = df[df['fare_amount'] < 0].index
     df.drop(idx_to_drop, inplace=True)
 
     # 3
     # create a new column that contains the travel_time information
     df['travel_time'] = df['tpep_dropoff_datetime'] - df['tpep_pickup_datetime']
     df['travel_time'] = df['travel_time'].dt.total_seconds()
-    # now we drop the travel times around 5 hours, or that are equal or less than 0 for some reason
-    idx_travel_time = df[(df['travel_time'] > 18000) | (df['travel_time'] <= 180)].index
+    # now we drop the travel times around 5 hours
+    idx_travel_time = df[df['travel_time'] > 18000].index
     df.drop(idx_travel_time, inplace=True)
 
     # 4

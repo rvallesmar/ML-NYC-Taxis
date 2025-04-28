@@ -21,7 +21,3 @@ DATABASE_HOST = os.getenv("DATABASE_HOST", "db")
 SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key_here")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-# File upload settings
-UPLOAD_FOLDER = "uploads"
-ALLOWED_EXTENSIONS = {"csv", "json", "parquet"} 

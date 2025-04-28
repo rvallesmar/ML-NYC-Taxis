@@ -29,7 +29,7 @@ def login(username: str, password: str) -> Optional[str]:
     # 6. Extract the token from the response
     # 7. Return the token if successful, None otherwise
     
-    url = f"{API_BASE_URL}/login"
+    url = f"{API_BASE_URL}/auth/token"
     
     headers = {
         "accept": "application/json",

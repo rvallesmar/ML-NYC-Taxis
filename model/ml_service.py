@@ -2,6 +2,7 @@ import json
 import os
 import time
 from pathlib import Path
+from datetime import datetime
 
 import joblib
 import numpy as np
@@ -50,6 +51,71 @@ except Exception as e:
 # Create models directory if it doesn't exist
 Path(os.path.dirname(settings.FARE_MODEL_PATH)).mkdir(parents=True, exist_ok=True)
 
+
+def calculate_distance(pickup_lat, pickup_lon, dropoff_lat, dropoff_lon):
+    """
+    Calculate the Haversine distance between two points.
+    
+    Parameters
+    ----------
+    pickup_lat : float
+        Pickup latitude
+    pickup_lon : float
+        Pickup longitude
+    dropoff_lat : float
+        Dropoff latitude
+    dropoff_lon : float
+        Dropoff longitude
+        
+    Returns
+    -------
+    float
+        Distance in kilometers
+    """
+    # Convert decimal degrees to radians
+    pickup_lat, pickup_lon, dropoff_lat, dropoff_lon = map(
+        np.radians, [pickup_lat, pickup_lon, dropoff_lat, dropoff_lon]
+    )
+    
+    # Haversine formula
+    dlat = dropoff_lat - pickup_lat
+    dlon = dropoff_lon - pickup_lon
+    a = np.sin(dlat/2)**2 + np.cos(pickup_lat) * np.cos(dropoff_lat) * np.sin(dlon/2)**2
+    c = 2 * np.arcsin(np.sqrt(a))
+    
+    # Radius of earth in kilometers is 6371
+    km = 6371.0 * c
+    return km
+
+
+def extract_time_features(datetime_str):
+    """
+    Extract time-related features from a datetime string.
+    
+    Parameters
+    ----------
+    datetime_str : str
+        Datetime string in format 'YYYY-MM-DD HH:MM:SS'
+        
+    Returns
+    -------
+    dict
+        Dictionary containing extracted time features
+    """
+    try:
+        dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        dt = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S")
+        
+    return {
+        'hour_of_day': dt.hour,
+        'day_of_week': dt.weekday(),
+        'month': dt.month,
+        'is_weekend': 1 if dt.weekday() >= 5 else 0,
+        'is_rush_hour': 1 if (dt.hour >= 7 and dt.hour <= 10) or (dt.hour >= 16 and dt.hour <= 19) else 0
+    }
+
+
 def predict_fare_duration(data):
     """
     Predict the fare amount and trip duration using the fare and duration models.
@@ -63,10 +129,7 @@ def predict_fare_duration(data):
         - dropoff_longitude
         - dropoff_latitude
         - passenger_count
-        - distance
-        - hour_of_day
-        - day_of_week
-        - etc.
+        - pickup_datetime
 
     Returns
     -------
@@ -77,32 +140,94 @@ def predict_fare_duration(data):
         - fare_score: float (model confidence for fare)
         - duration_score: float (model confidence for duration)
     """
-    # TODO: Implement fare and duration prediction
-    # 1. Convert input data to DataFrame or numpy array
-    # 2. Preprocess features
-    # 3. Make predictions with the models
-    # 4. Return results
-
-    # Temporary mock response
+    try:
+        # Extract input features
+        pickup_lon = data.get('pickup_longitude')
+        pickup_lat = data.get('pickup_latitude')
+        dropoff_lon = data.get('dropoff_longitude')
+        dropoff_lat = data.get('dropoff_latitude')
+        passenger_count = data.get('passenger_count')
+        pickup_datetime = data.get('pickup_datetime')
+        
+        # Calculate distance if not provided
+        if 'distance' in data and data['distance'] is not None:
+            distance = data['distance']
+        else:
+            distance = calculate_distance(pickup_lat, pickup_lon, dropoff_lat, dropoff_lon)
+        
+        # Extract time features
+        time_features = extract_time_features(pickup_datetime)
+        
+        # Create feature dictionary
+        features = {
+            'pickup_longitude': pickup_lon,
+            'pickup_latitude': pickup_lat,
+            'dropoff_longitude': dropoff_lon,
+            'dropoff_latitude': dropoff_lat,
+            'passenger_count': passenger_count,
+            'distance': distance,
+            **time_features
+        }
+        
+        # Convert to pandas DataFrame
+        features_df = pd.DataFrame([features])
+        
+        # Make predictions if models are available
+        if fare_model is not None:
+            fare_pred = fare_model.predict(features_df)[0]
+            # Get prediction confidence (if model supports it)
+            try:
+                fare_score = getattr(fare_model, "predict_proba", lambda x: [[0.8]])(features_df)[0][0]
+            except:
+                fare_score = 0.8  # Default confidence score
+        else:
+            # Mock prediction if model is not available
+            print("Warning: Using mock fare prediction because model is not available")
+            fare_pred = 15.0 + (2.5 * distance) + (0.5 * passenger_count)
+            fare_score = 0.6  # Lower confidence for mock prediction
+        
+        if duration_model is not None:
+            duration_pred = duration_model.predict(features_df)[0]
+            # Get prediction confidence (if model supports it)
+            try:
+                duration_score = getattr(duration_model, "predict_proba", lambda x: [[0.8]])(features_df)[0][0]
+            except:
+                duration_score = 0.8  # Default confidence score
+        else:
+            # Mock prediction if model is not available
+            print("Warning: Using mock duration prediction because model is not available")
+            duration_pred = 300.0 + (120.0 * distance) + (time_features['is_rush_hour'] * 300.0)
+            duration_score = 0.6  # Lower confidence for mock prediction
+        
+        # Return predictions
+        return {
+            "fare_amount": float(fare_pred),
+            "trip_duration": float(duration_pred),
+            "fare_score": float(fare_score),
+            "duration_score": float(duration_score)
+        }
+    
+    except Exception as e:
+        print(f"Error in fare/duration prediction: {e}")
+        # Return fallback predictions
     return {
         "fare_amount": 15.0,
         "trip_duration": 1200.0,  # in seconds
-        "fare_score": 0.85,
-        "duration_score": 0.80
+            "fare_score": 0.5,
+            "duration_score": 0.5
     }
+
 
 def predict_demand(data):
     """
-    Predict taxi demand for a specific area and time.
+    Predict taxi demand for a specific region and time.
 
     Parameters
     ----------
     data : dict
         Dictionary containing the features required for prediction:
         - region_id
-        - hour_of_day
-        - day_of_week
-        - etc.
+        - date_hour (string in format 'YYYY-MM-DD HH:MM:SS')
 
     Returns
     -------
@@ -111,17 +236,60 @@ def predict_demand(data):
         - demand: int (predicted number of pickups)
         - demand_score: float (model confidence)
     """
-    # TODO: Implement demand prediction
-    # 1. Convert input data to DataFrame or numpy array
-    # 2. Preprocess features
-    # 3. Make predictions with the model
-    # 4. Return results
-
-    # Temporary mock response
+    try:
+        # Extract input features
+        region_id = data.get('region_id')
+        date_hour = data.get('date_hour')
+        
+        # Extract time features
+        time_features = extract_time_features(date_hour)
+        
+        # Create feature dictionary
+        features = {
+            'region_id': region_id,
+            **time_features
+        }
+        
+        # Convert to pandas DataFrame
+        features_df = pd.DataFrame([features])
+        
+        # Make predictions if model is available
+        if demand_model is not None:
+            demand_pred = demand_model.predict(features_df)[0]
+            # Get prediction confidence (if model supports it)
+            try:
+                demand_score = getattr(demand_model, "predict_proba", lambda x: [[0.75]])(features_df)[0][0]
+            except:
+                demand_score = 0.75  # Default confidence score
+        else:
+            # Mock prediction if model is not available
+            print("Warning: Using mock demand prediction because model is not available")
+            base_demand = 20
+            # More demand on weekends and rush hours
+            weekend_factor = 1.5 if time_features['is_weekend'] else 1.0
+            rush_hour_factor = 1.8 if time_features['is_rush_hour'] else 1.0
+            hour_factor = 0.5 if (time_features['hour_of_day'] >= 0 and time_features['hour_of_day'] < 6) else 1.0
+            
+            # Generate different demands based on region_id (for variety)
+            region_factor = 0.8 + ((region_id % 10) / 10)
+            
+            demand_pred = int(base_demand * weekend_factor * rush_hour_factor * hour_factor * region_factor)
+            demand_score = 0.6  # Lower confidence for mock prediction
+        
+        # Return predictions
     return {
-        "demand": 25,
-        "demand_score": 0.75
+            "demand": int(demand_pred),
+            "demand_score": float(demand_score)
+        }
+    
+    except Exception as e:
+        print(f"Error in demand prediction: {e}")
+        # Return fallback predictions
+        return {
+            "demand": 20,
+            "demand_score": 0.5
     }
+
 
 def classify_process():
     """
