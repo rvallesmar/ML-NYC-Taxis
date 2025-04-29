@@ -1,6 +1,6 @@
 from app import db
 from app.auth.jwt import get_current_user
-from app.model.schema import (BatchFareDurationRequest, DemandRequest,
+from app.model.schema import (DemandRequest,
                               DemandResponse, FareDurationRequest,
                               FareDurationResponse)
 from app.model.services import predict_demand, predict_fare_duration
@@ -106,49 +106,3 @@ async def predict_demand_endpoint(
     # Return the response using the DemandResponse Pydantic model
     # This validates the output format
     return DemandResponse(**response)
-
-
-@router.post("/predict/batch_fare_duration", response_model=list[FareDurationResponse])
-async def batch_predict_fare_duration(
-    request: BatchFareDurationRequest,
-    current_user=Depends(get_current_user)
-):
-    """
-    Batch predict fare amount and trip duration for multiple taxi rides.
-    
-    This endpoint processes multiple fare/duration prediction requests in a single call.
-    """
-    # Initialize empty list to store responses
-    responses = []
-    
-    # Process each request in the batch
-    for req in request.requests:
-        try:
-            # Call the single prediction endpoint for each request
-            # This reuses the existing endpoint logic
-            result = await predict_fare_duration_endpoint(req, current_user)
-            responses.append(result)
-        except HTTPException as e:
-            # Handle exceptions for individual predictions
-            # Add a failed response but continue processing other requests
-            responses.append(FareDurationResponse(
-                success=False,
-                fare_amount=None,
-                trip_duration=None,
-                fare_score=None,
-                duration_score=None
-            ))
-        except Exception as e:
-            # Handle unexpected errors
-            # Add a failed response but continue processing other requests
-            print(f"Unexpected error in batch processing: {e}")
-            responses.append(FareDurationResponse(
-                success=False,
-                fare_amount=None,
-                trip_duration=None,
-                fare_score=None,
-                duration_score=None
-            ))
-    
-    # Return all responses, both successful and failed
-    return responses 

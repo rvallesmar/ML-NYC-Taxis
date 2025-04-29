@@ -183,3 +183,8 @@ data/taxi_zones/taxi_zones.shp
 data/taxi_zones/taxi_zones.shx
 data/.DS_Store
 .DS_Store
+
+# Ignore Zone.Identifier files
+*:Zone.Identifier
+*Zone.Identifier
+

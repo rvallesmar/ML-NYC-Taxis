@@ -29,7 +29,3 @@ class DemandResponse(BaseModel):
     success: bool
     demand: Optional[int] = None
     demand_score: Optional[float] = None
-
-
-class BatchFareDurationRequest(BaseModel):
-    requests: List[FareDurationRequest] 

@@ -8,30 +8,36 @@ This project aims to predict taxi fare, duration, and demand in NYC. The backbon
 nyc-taxi-prediction/
 ├── api/                  # FastAPI backend
 │   ├── app/              # Application code
-│   │   ├── auth/         # Authentication
-│   │   ├── feedback/     # Feedback handling
-│   │   ├── model/        # Prediction endpoints
-│   │   └── user/         # User management
-│   ├── tests/            # API tests
-│   ├── Dockerfile        # API Docker config
+│   │   ├── auth/         # Authentication and user management
+│   │   ├── feedback/     # User feedback collection endpoints
+│   │   ├── model/        # Prediction endpoints for fare, duration, and demand
+│   │   └── settings.py   # API configuration settings
+│   ├── Dockerfile        # API Docker configuration
 │   └── Dockerfile.populate # Database initialization
-├── db_data/              # Database-related files
+├── db_data/              # Database-related files and persistent storage
 ├── model/                # ML model service
-│   ├── tests/            # Model tests
-│   ├── Dockerfile        # Model Docker config
-│   └── ml_service.py     # Model service implementation
+│   ├── ml_service.py     # Model service implementation for predictions
+│   ├── settings.py       # ML service configuration settings
+│   ├── models/           # Directory for stored ML models
+│   │   ├── fare_model.joblib     # Fare prediction model
+│   │   ├── duration_model.joblib # Duration prediction model
+│   │   └── demand_model.joblib   # Demand prediction model
+│   ├── tests/            # Model unit tests
+│   └── Dockerfile        # Model Docker configuration
 ├── notebooks/            # Jupyter notebooks for exploration
-│   ├── data_exploration.ipynb  # Data analysis
-│   ├── model_training.ipynb    # Model development
-│   └── model_evaluation.ipynb  # Model assessment
+│   ├── data_exploration.ipynb  # NYC taxi data analysis
+│   ├── model_training.ipynb    # Model development and training
+│   └── model_evaluation.ipynb  # Model assessment and validation
 ├── stress_test/          # Load testing with Locust
 ├── tests/                # Integration tests
 ├── ui/                   # Streamlit UI
 │   ├── app/              # UI application
+│   │   ├── pages/        # Streamlit pages
+│   │   ├── utils/        # Helper functions
+│   │   └── app.py        # Main UI entry point
 │   ├── tests/            # UI tests
-│   └── Dockerfile        # UI Docker config
+│   └── Dockerfile        # UI Docker configuration
 ├── docker-compose.yml    # Services orchestration
-├── .gitignore            # Git ignore patterns
 └── README.md             # Project documentation
 ```
 

@@ -1,10 +1,14 @@
-.PHONY: setup run stop clean test format
+.PHONY: setup run stop clean test format populate
 
 setup:
 	docker network create shared_network || true
 	cp .env.original .env
 
-run:
+populate:
+	cd api && cp .env.original .env
+	docker-compose up --build -d 
+
+run: 
 	docker-compose up --build -d
 
 stop:
