@@ -116,8 +116,24 @@ def clean_trip_data(filename) -> pd.DataFrame:
 
     df = pd.read_parquet(raw_dataset)
     # 1
-    # drop the null values
+    # drop the null values, we will also be dropping any values that are not in the month that we are supposed to be looking at
+    # i.e. if our month is 2022-05, the we will drop any values below that and above that
     df.dropna(inplace=True)
+    # we get our boundaries, we will use the median since this will most likely contain the month that the dataset is supposed to be about
+    median = df['tpep_pickup_datetime'].median()
+    lower_bound = pd.to_datetime(f'{median.year}-{median.month}-01 00:00:01')
+    if median.month == 2:
+        upper_bound = pd.to_datetime(f'{median.year}-{median.month}-28 11:59:59')
+    else:
+        upper_bound = pd.to_datetime(f'{median.year}-{median.month}-30 11:59:59')
+    
+    # now with our boundaries, we drop any rows which date time is not within these bounds
+    dates_pickup_idx = df[df['tpep_pickup_datetime'] < lower_bound].index
+    dates_dropoff_idx = df[upper_bound < df['tpep_dropoff_datetime']].index
+
+    # we drop from our table those values
+    df.drop(dates_pickup_idx,inplace=True)
+    df.drop(dates_dropoff_idx,inplace=True)
 
     # 2
     # drop the rows that contain negative values in their
@@ -181,7 +197,7 @@ def clean_trip_data(filename) -> pd.DataFrame:
     df['distance_between_zones'] = df['distance_between_zones']*0.000621371
 
     # 8 finally we drop the columns that we might not need
-    df.drop(columns=['VendorID','tpep_pickup_datetime','tpep_dropoff_datetime','passenger_count',
+    df.drop(columns=['VendorID','tpep_pickup_datetime','tpep_dropoff_datetime',
                    'RatecodeID','store_and_fwd_flag','payment_type','extra',
                    'mta_tax','tip_amount','tolls_amount','total_amount','trip_distance'],inplace=True)
     
