@@ -57,4 +57,8 @@ def preprocess_data(
     val = np.concatenate((val_scaled,val_data), axis=1)
     test = np.concatenate((test_scaled,test_data), axis=1)
 
+    print("Output train data shape: ", train.shape)
+    print("Output val data shape: ", val.shape)
+    print("Output test data shape: ", test.shape)
+
     return train, val, test
