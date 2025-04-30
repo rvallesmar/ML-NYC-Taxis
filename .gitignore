@@ -181,6 +181,17 @@ data/taxi_zones/taxi_zones.prj
 data/taxi_zones/taxi_zones.dbf
 data/taxi_zones/taxi_zones.shp
 data/taxi_zones/taxi_zones.shx
+data/yellow_tripdata_2022-01.parquet
+data/yellow_tripdata_2022-02.parquet
+data/yellow_tripdata_2022-03.parquet
+data/yellow_tripdata_2022-04.parquet
+data/yellow_tripdata_2022-06.parquet
+data/yellow_tripdata_2022-07.parquet
+data/yellow_tripdata_2022-08.parquet
+data/yellow_tripdata_2022-09.parquet
+data/yellow_tripdata_2022-10.parquet
+data/yellow_tripdata_2022-11.parquet
+data/yellow_tripdata_2022-12.parquet
 data/.DS_Store
 .DS_Store
 

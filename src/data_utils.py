@@ -137,17 +137,23 @@ def clean_trip_data(filename) -> pd.DataFrame:
 
     # 2
     # drop the rows that contain negative values in their
-    # fare_amount
-    idx_to_drop = df[df['fare_amount'] < 0].index
+    # fare_amount, or really small values
+    idx_to_drop = df[df['fare_amount'] < 1].index
     df.drop(idx_to_drop, inplace=True)
+    # also anything above 40, since most of our data is below this threshold
+    idx_fare_low = df[df['fare_amount'] > 60.0].index
+    df.drop(idx_fare_low, inplace=True)
 
     # 3
     # create a new column that contains the travel_time information
     df['travel_time'] = df['tpep_dropoff_datetime'] - df['tpep_pickup_datetime']
     df['travel_time'] = df['travel_time'].dt.total_seconds()
     # now we drop the travel times around 5 hours
-    idx_travel_time = df[df['travel_time'] > 18000].index
-    df.drop(idx_travel_time, inplace=True)
+    idx_travel_time_big = df[df['travel_time'] > 4000.0].index
+    df.drop(idx_travel_time_big, inplace=True)
+    # we also drop travel times below 3 minutes
+    idx_travel_time_small = df[df['travel_time'] < 180].index
+    df.drop(idx_travel_time_small, inplace=True)
 
     # 4
     # include a new categorical column called 'time_of_day' to establish whether
@@ -184,21 +190,47 @@ def clean_trip_data(filename) -> pd.DataFrame:
     # now we will augment out dataset including the distance between the
     # centroids of each zone based on their geometry
     # we can get that from the .shp file
-    gdf = gp.read_file(config.DATASET_ZONE_GEOM)
-    gdf['centroids'] = gdf.centroid
-    gdf = gdf.to_crs('EPSG:32618')
+    # gdf = gp.read_file(config.DATASET_ZONE_GEOM)
+    # gdf['centroids'] = gdf.centroid
+    # gdf = gdf.to_crs('EPSG:32618')
 
-    def dist_between_zones(row):
-        pu = int(row['PULocationID'])
-        do = int(row['DOLocationID'])
-        return gdf['centroids'].iloc[pu-1].distance(gdf['centroids'].iloc[do-1])
-    df['distance_between_zones'] = df.apply(dist_between_zones,axis=1)
-    # we also convert the distances to miles (they are originally in meters)
-    df['distance_between_zones'] = df['distance_between_zones']*0.000621371
+    # def dist_between_zones(row):
+    #     pu = int(row['PULocationID'])
+    #     do = int(row['DOLocationID'])
+    #     return gdf['centroids'].iloc[pu-1].distance(gdf['centroids'].iloc[do-1])
+    # df['distance_between_zones'] = df.apply(dist_between_zones,axis=1)
+    # # we also convert the distances to miles (they are originally in meters)
+    # df['distance_between_zones'] = df['distance_between_zones']*0.000621371
+
+    # 7 alternate
+    # remove trip distances equal to 0
+    idx_trip_distance_low = df[df['trip_distance'] == 0.0].index
+    df.drop(idx_trip_distance_low, inplace=True)
+    # also remove trip distances above 100 miles
+    idx_trip_distance_high = df[df['trip_distance'] > 100.0].index
+    df.drop(idx_trip_distance_high, inplace=True)
 
     # 8 finally we drop the columns that we might not need
     df.drop(columns=['VendorID','tpep_pickup_datetime','tpep_dropoff_datetime',
                    'RatecodeID','store_and_fwd_flag','payment_type','extra',
-                   'mta_tax','tip_amount','tolls_amount','total_amount','trip_distance'],inplace=True)
+                   'mta_tax','tip_amount','tolls_amount','total_amount','PULocationID','DOLocationID',
+                   'improvement_surcharge','airport_fee','congestion_surcharge'],inplace=True)
     
+    return df
+
+def sampled_yearly_data(files:list, n_samples:int):
+    """
+    This function return a df containing sampled data from all the specified file names in the list
+
+    Arguments:
+        files : list
+            A list of path files containing all the files that want to be sampled
+
+    Returns:
+        df : pd.DataFrame
+            Pandas dataframe containing the same amount of random sampling from the specified
+            data frames
+    """
+    df_list = [clean_trip_data(file_path).sample(n=n_samples, random_state=42) for file_path in files]
+    df = pd.concat(df_list, ignore_index=True)
     return df
