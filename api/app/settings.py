@@ -15,7 +15,8 @@ REDIS_DB = int(os.getenv("REDIS_DB", 0))
 POSTGRES_DB = os.getenv("POSTGRES_DB", "taxi_db")
 POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
-DATABASE_HOST = os.getenv("DATABASE_HOST", "db")
+# DATABASE_HOST = os.getenv("DATABASE_HOST", "db")
+DATABASE_HOST = os.getenv("DATABASE_HOST", "anyone-ai-nyc-taxis-db.cwj0okygwhge.us-east-1.rds.amazonaws.com")
 
 # Authentication settings
 SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key_here")
