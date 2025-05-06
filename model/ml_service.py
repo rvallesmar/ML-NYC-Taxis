@@ -277,10 +277,10 @@ def predict_demand(data):
             demand_score = 0.6  # Lower confidence for mock prediction
         
         # Return predictions
-    return {
-            "demand": int(demand_pred),
-            "demand_score": float(demand_score)
-        }
+        return {
+                "demand": int(demand_pred),
+                "demand_score": float(demand_score)
+            }
     
     except Exception as e:
         print(f"Error in demand prediction: {e}")
