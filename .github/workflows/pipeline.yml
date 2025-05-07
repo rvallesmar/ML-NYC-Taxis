@@ -61,6 +61,7 @@ jobs:
           chmod 700 ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > ec2-key.pem
           chmod 400 ec2-key.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
           ls -lah ec2-key.pem  # Verifica que el archivo se creó correctamente
           ssh -i ec2-key.pem ubuntu@${{ secrets.EC2_HOST }} 'bash -s' <<'ENDSSH'
             docker run hello-world
