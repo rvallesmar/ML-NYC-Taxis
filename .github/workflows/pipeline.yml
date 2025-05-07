@@ -49,11 +49,15 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Configure SSH key
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > ec2-key.pem
           chmod 600 ec2-key.pem
           ls -lah ec2-key.pem  # Verifica que el archivo se creó correctamente
-          # ssh -i ec2-key.pem ubuntu@${{ secrets.EC2_HOST }}
+          ssh -i ec2-key.pem ubuntu@${{ secrets.EC2_HOST }}
 
       - name: SSH into EC2 and deploy
         env:
