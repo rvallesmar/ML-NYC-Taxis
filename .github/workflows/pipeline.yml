@@ -56,6 +56,10 @@ jobs:
           # ssh -i ec2-key.pem ubuntu@${{ secrets.EC2_HOST }}
 
       - name: SSH into EC2 and deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
