@@ -26,19 +26,19 @@ jobs:
       
       - name: Build and push images
         run: |
-          docker build --cache-from -t taxi-api ./api
+          docker build -t taxi-api ./api
           docker tag taxi-api:latest  public.ecr.aws/w4d8o1l0/taxi-api:latest
           docker push  public.ecr.aws/w4d8o1l0/taxi-api:latest
 
-          docker build --cache-from -t taxi-ml-service ./model
+          docker build -t taxi-ml-service ./model
           docker tag taxi-ml-service:latest  public.ecr.aws/w4d8o1l0/taxi-ml-service:latest
           docker push  public.ecr.aws/w4d8o1l0/taxi-ml-service:latest
 
-          docker build --cache-from -t taxi-ui ./ui
+          docker build -t taxi-ui ./ui
           docker tag taxi-ui:latest  public.ecr.aws/w4d8o1l0/taxi-ui:latest
           docker push  public.ecr.aws/w4d8o1l0/taxi-ui:latest
 
-          docker build --cache-from -t populate-db -f ./api/Dockerfile.populate ./api
+          docker build -t populate-db -f ./api/Dockerfile.populate ./api
           docker tag populate-db:latest  public.ecr.aws/w4d8o1l0/populate-db:latest
           docker push  public.ecr.aws/w4d8o1l0/populate-db:latest
 
