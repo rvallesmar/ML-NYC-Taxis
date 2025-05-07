@@ -3,6 +3,11 @@ services:
   api:
     image: public.ecr.aws/w4d8o1l0/taxi-api:latest
     container_name: taxi_api
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_HOST: ${DATABASE_HOST}
     depends_on:
       - redis
       - model
