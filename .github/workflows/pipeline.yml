@@ -70,9 +70,9 @@ jobs:
 
           ssh -i ec2-key.pem ubuntu@${{ secrets.EC2_HOST }} 'bash -s' <<'ENDSSH'
             cd ~/app
-            docker run hello-world
-            # docker-compose down
-            # docker-compose up -d
+            docker-compose down -v
+            docker rmi $(docker images -q)
+            docker-compose up -d
           ENDSSH
 
       # - name: SSH into EC2 and deploy
