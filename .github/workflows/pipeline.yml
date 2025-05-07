@@ -1,7 +1,7 @@
 name: Deploy to AWS EC2
 on:
-  pull_request:
-    branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
   workflow_dispatch:  # Esto habilita ejecución manual
 jobs:
   build:
