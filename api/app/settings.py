@@ -21,3 +21,7 @@ DATABASE_HOST = os.getenv("DATABASE_HOST", "db")
 SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key_here")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Queue names
+FARE_DURATION_QUEUE = os.getenv("FARE_DURATION_QUEUE", "fare_duration_queue")
+DEMAND_QUEUE = os.getenv("DEMAND_QUEUE", "demand_queue")

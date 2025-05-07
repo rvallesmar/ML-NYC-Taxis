@@ -77,8 +77,16 @@ test_user = User(
     email="test@example.com",
 )
 
+# Create a dgallardo
+test_user_dga = User(
+    name="Douglas Gallardo",
+    password="Sofia2017",
+    email="dgallardo@example.com",
+)
+
 session.add(admin_user)
 session.add(test_user)
+session.add(test_user_dga)
 session.commit()
 print("Default users added")
 
