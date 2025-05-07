@@ -45,27 +45,22 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Decode and store SSH key
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure SSH key
         run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > ec2-key.pem
-          chmod 400 ec2-key.pem
-          ls -lah ec2-key.pem
-          cat ec2-key.pem
-      - name: Deploy to EC2
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-          # scp -i ec2-key.pem $GITHUB_WORKSPACE/dreamed-house.jar ubuntu@${{ secrets.EC2_HOST }}:~/app
-          ssh -i ec2-key.pem ubuntu@${{ secrets.EC2_HOST }} 'bash -s' <<'ENDSSH'
-            docker pull  public.ecr.aws/w4d8o1l0/taxi-api:latest
-            docker pull  public.ecr.aws/w4d8o1l0/taxi-ml-service:latest
-            docker pull  public.ecr.aws/w4d8o1l0/taxi-ui:latest
-            docker pull  public.ecr.aws/w4d8o1l0/populate-db:latest
+          echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > ec2-key.pem
+          chmod 600 ec2-key.pem
+          ls -lah ec2-key.pem  # Verifica que el archivo se creó correctamente
+
+      - name: SSH into EC2 and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ec2-key.pem
+          script: |
             cd ~/app
             docker-compose down
             docker-compose up -d
-          ENDSSH
-            
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}   
