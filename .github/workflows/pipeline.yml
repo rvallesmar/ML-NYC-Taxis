@@ -42,7 +42,7 @@ jobs:
           docker push  public.ecr.aws/w4d8o1l0/populate-db:latest
 
   deploy:
-    # needs: build
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
