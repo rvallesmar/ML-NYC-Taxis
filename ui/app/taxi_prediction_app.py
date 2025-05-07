@@ -7,6 +7,9 @@ import requests
 import streamlit as st
 from app.settings import API_BASE_URL, DEFAULT_MAP_LOCATION, DEFAULT_ZOOM, PAGE_ICON, PAGE_TITLE
 from streamlit_folium import folium_static
+from streamlit_js_eval import streamlit_js_eval
+import polyline
+import json
 
 
 def login(username: str, password: str) -> Optional[str]:
@@ -156,6 +159,15 @@ def send_feedback(token: str, feedback: str, prediction_type: str, prediction_da
         st.error(f"Sending feedback failed: {str(e)}")
         return None
 
+def geocode_address(address, api_key):
+    url = f"https://maps.googleapis.com/maps/api/geocode/json?address={address}&key={api_key}"
+    response = requests.get(url)
+    result = response.json()
+    if result["status"] == "OK":
+        location = result["results"][0]["geometry"]["location"]
+        return location["lat"], location["lng"]
+    else:
+        return None, None
 
 # User interface
 st.set_page_config(page_title=PAGE_TITLE, page_icon=PAGE_ICON)
@@ -186,102 +198,66 @@ else:
     token = st.session_state.token
 
     if page == "Fare & Duration Prediction":
-        st.markdown("## Fare & Duration Prediction")
-        
-        # Input form for fare/duration prediction
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            pickup_longitude = st.number_input("Pickup Longitude", value=-73.98)
-            pickup_latitude = st.number_input("Pickup Latitude", value=40.73)
-            passenger_count = st.slider("Passenger Count", min_value=1, max_value=9, value=1)
-        
-        with col2:
-            dropoff_longitude = st.number_input("Dropoff Longitude", value=-73.96)
-            dropoff_latitude = st.number_input("Dropoff Latitude", value=40.78)
-            pickup_datetime = st.date_input("Pickup Date") 
-            pickup_time = st.time_input("Pickup Time")
-        
-        # Combine date and time
-        pickup_datetime_str = f"{pickup_datetime} {pickup_time}"
-        
-        # Calculate distance (This would be more accurate with proper geo-calculations)
-        # TODO: Implement haversine distance calculation
-        
-        # Submit button
-        if st.button("Predict Fare & Duration"):
-            prediction_data = {
-                "pickup_longitude": pickup_longitude,
-                "pickup_latitude": pickup_latitude,
-                "dropoff_longitude": dropoff_longitude,
-                "dropoff_latitude": dropoff_latitude,
-                "passenger_count": passenger_count,
-                "pickup_datetime": pickup_datetime_str
-            }
-            
-            response = predict_fare_duration(token, prediction_data)
-            
-            if response and response.status_code == 200:
-                result = response.json()
-                st.session_state.last_prediction = result
-                st.session_state.last_prediction_data = prediction_data
-                st.session_state.last_prediction_type = "fare_duration"
                 
-                # Display results
-                st.success("Prediction successful!")
-                
-                res_col1, res_col2 = st.columns(2)
-                
-                with res_col1:
-                    st.metric(
-                        label="Estimated Fare", 
-                        value=f"${result.get('fare_amount', 0):.2f}",
-                        delta=None
-                    )
-                    st.caption(f"Confidence: {result.get('fare_score', 0):.2%}")
-                
-                with res_col2:
-                    minutes = result.get('trip_duration', 0) / 60
-                    st.metric(
-                        label="Estimated Duration", 
-                        value=f"{int(minutes // 60)}h {int(minutes % 60)}m",
-                        delta=None
-                    )
-                    st.caption(f"Confidence: {result.get('duration_score', 0):.2%}")
-                
-                # Display map
-                st.subheader("Route Map")
-                m = folium.Map(location=DEFAULT_MAP_LOCATION, zoom_start=DEFAULT_ZOOM)
-                
-                # Add markers for pickup and dropoff
-                folium.Marker(
-                    [pickup_latitude, pickup_longitude],
-                    popup="Pickup Location",
-                    icon=folium.Icon(color="green", icon="play"),
-                ).add_to(m)
-                
-                folium.Marker(
-                    [dropoff_latitude, dropoff_longitude],
-                    popup="Dropoff Location",
-                    icon=folium.Icon(color="red", icon="stop"),
-                ).add_to(m)
-                
-                # Add a line between pickup and dropoff
-                folium.PolyLine(
-                    locations=[[pickup_latitude, pickup_longitude], 
-                               [dropoff_latitude, dropoff_longitude]],
-                    color="blue",
-                    weight=2,
-                    opacity=0.7
-                ).add_to(m)
-                
-                # Display the map
-                folium_static(m)
+        st.title("🚖 Fare & Duration Prediction")
+
+        GOOGLE_MAPS_API_KEY = "AIzaSyCaaee4Cy2UXm86yGaAbsBH5YDjyK4LEGo"
+
+        # Mostrar mapa base de Nueva York
+        ny_lat, ny_lng = 40.7128, -74.0060
+
+        with st.form("ruta_form"):
+            origen = st.text_input("📍 Origin Address", placeholder="Ej. Times Square, New York")
+            destino = st.text_input("🏁 Destination Address", placeholder="Ej. Central Park, New York")
+            calcular = st.form_submit_button("Calculate Route")
+
+        if calcular and origen and destino:
+            # Llamar a la Directions API
+            lat1, lng1 = geocode_address(origen, GOOGLE_MAPS_API_KEY)
+            lat2, lng2 = geocode_address(destino, GOOGLE_MAPS_API_KEY)
+            directions_url = f"https://maps.googleapis.com/maps/api/directions/json?origin={lat1},{lng1}&destination={lat2},{lng2}&mode=driving&key={GOOGLE_MAPS_API_KEY}"
+            response = requests.get(directions_url)
+            data = response.json()
+
+            if data["status"] == "OK":
+                route = data["routes"][0]
+                puntos = polyline.decode(route["overview_polyline"]["points"])
+                # Sumar distancias y duraciones de todos los legs
+                distancia_total_m = 0
+                duracion_total_s = 0
+                for leg in route["legs"]:
+                    distancia_total_m += leg["distance"]["value"]  # en metros
+                    duracion_total_s += leg["duration"]["value"]   # en segundos
+
+                # Convertir a texto legible
+                distancia_km = round(distancia_total_m / 1000, 2)
+                horas = duracion_total_s // 3600
+                minutos = (duracion_total_s % 3600) // 60
+                duracion_texto = f"{horas}h {minutos}min" if horas > 0 else f"{minutos}min"
+
+                # Crear el mapa
+                ruta_map = folium.Map(location=[ny_lat, ny_lng], zoom_start=13)
+
+                # Marcar origen y destino
+                origen_coords = [route["legs"][0]["start_location"]["lat"], route["legs"][0]["start_location"]["lng"]]
+                destino_coords = [route["legs"][0]["end_location"]["lat"], route["legs"][0]["end_location"]["lng"]]
+
+                folium.Marker(origen_coords, tooltip="Origen", icon=folium.Icon(color="green")).add_to(ruta_map)
+                folium.Marker(destino_coords, tooltip="Destino", icon=folium.Icon(color="red")).add_to(ruta_map)
+
+                # Trazar la línea de la ruta
+                folium.PolyLine(puntos, color="blue", weight=5, opacity=0.8).add_to(ruta_map)
+
+                # Mostrar el mapa y resultados
+                folium_static(ruta_map)
+
+                st.success(f"🚗 Distance: {distancia_km} KM | ⏱️ Estimated duration: {duracion_texto}")
             else:
-                if response:
-                    st.error(f"Prediction failed: {response.text}")
-                else:
-                    st.error("Prediction failed. Please try again.")
+                st.error("The route could not be calculated. Please check the addresses you entered.")
+        else:
+            # Mapa estático si aún no se ha calculado
+            mapa_base = folium.Map(location=[ny_lat, ny_lng], zoom_start=12)
+            folium_static(mapa_base)
     
     elif page == "Demand Prediction":
         st.markdown("## Taxi Demand Prediction")
