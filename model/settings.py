@@ -19,8 +19,6 @@ DEMAND_QUEUE = os.getenv("DEMAND_QUEUE", "demand_queue")
 MODEL_DIR = os.getenv("MODEL_DIR", "model/models")
 FARE_MODEL_PATH = os.path.join(MODEL_DIR, "fare_model.joblib")
 DURATION_MODEL_PATH = os.path.join(MODEL_DIR, "duration_model.joblib")
-# FARE_MODEL_PATH = os.path.join(MODEL_DIR, "model_fa.pkl")
-# DURATION_MODEL_PATH = os.path.join(MODEL_DIR, "model_tt.pkl")
 DEMAND_MODEL_PATH = os.path.join(MODEL_DIR, "demand_model.joblib")
 
 # API timeout for waiting for ML results (seconds)
