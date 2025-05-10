@@ -35,7 +35,7 @@ def preprocess_data(
     # we only have one categorical feature in our cleaned data set which is time_of_day
     # and it has 3 categories, so we can use OneHotEncoder for this task
 
-    one_hot_enc = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
+    one_hot_enc = OneHotEncoder(handle_unknown='ignore',sparse=False)
     # first fit and transform training data
     train_data = one_hot_enc.fit_transform(working_train_df[['time_of_day']])
     #transform the others
