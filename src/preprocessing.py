@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
+import os
+from pathlib import Path
+import pickle
 
 def preprocess_data(
     train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame
@@ -42,7 +45,21 @@ def preprocess_data(
     val_data = one_hot_enc.transform(working_val_df[['time_of_day']])
     test_data = one_hot_enc.transform(working_test_df[['time_of_day']])
 
-
+    # upload the trained OneHotEncoder to the model/models folder
+    # it will be needed to preprocess the inputs when the model is used to make predictions
+    save_folder = str(Path(__file__).parent.parent / "model/models")
+    filename = "oneh_time_of_day.pkl"
+    save_path = os.path.join(save_folder, filename)
+    os.makedirs(save_folder, exist_ok=True)
+    
+    # create or replace with new depending on whether it exists or not
+    if not os.path.exists(save_path):
+        with open(save_path,'wb') as f:
+            pickle.dump(one_hot_enc,f)
+    else:
+        os.remove(save_path)
+        with open(save_path,'wb') as f:
+            pickle.dump(one_hot_enc,f)
 
     # 2
     # since we do not expect to have any null values in our dataset (its supposed to have been
@@ -52,6 +69,22 @@ def preprocess_data(
     train_scaled = scaler.fit_transform(working_train_df.drop(columns=['time_of_day']))
     val_scaled = scaler.transform(working_val_df.drop(columns=['time_of_day']))
     test_scaled = scaler.transform(working_test_df.drop(columns=['time_of_day']))
+
+    # upload the trained OneHotEncoder to the model/models folder
+    # it will be needed to preprocess the inputs when the model is used to make predictions
+    save_folder = str(Path(__file__).parent.parent / "model/models")
+    filename = "min_max_scaler.pkl"
+    save_path = os.path.join(save_folder, filename)
+    os.makedirs(save_folder, exist_ok=True)
+
+    # same thing with the MinMax scaler, we need to create or replace
+    if not os.path.exists(save_path):
+        with open(save_path,'wb') as f:
+            pickle.dump(scaler,f)
+    else:
+        os.remove(save_path)
+        with open(save_path,'wb') as f:
+            pickle.dump(scaler,f)
 
     train = np.concatenate((train_scaled,train_data), axis=1)
     val = np.concatenate((val_scaled,val_data), axis=1)
