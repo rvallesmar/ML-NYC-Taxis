@@ -1,7 +1,8 @@
-numpy
-pandas
-geopandas
-matplotlib
-pyarrow
-xgboost
-scikit-learn
+fastparquet==0.7.2
+pyarrow==20.0.0
+numpy==1.22.3
+pandas==1.4.2
+geopandas==1.0.1
+matplotlib==3.5.2
+xgboost==1.6.1
+scikit-learn==1.0.2
