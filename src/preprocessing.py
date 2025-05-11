@@ -95,3 +95,40 @@ def preprocess_data(
     print("Output test data shape: ", test.shape)
 
     return train, val, test
+
+def preprocess_input_data(inpu_data:pd.DataFrame) -> np.ndarray:
+    """
+    Pre processes the data for a specific input using the already trained MinMax scaler and OneHot encoder.
+
+    Arguments:
+        input : pd.DataFrame
+    Returns:
+        processed_data : np.ndarrary
+    """
+
+    working_df = inpu_data.copy()
+
+    # get the trained OneHot encoder from the model/models folder
+    save_folder = str(Path(__file__).parent.parent / "model/models")
+    filename = "oneh_time_of_day.pkl"
+    save_path = os.path.join(save_folder, filename)
+
+    one_hot_encoder = None
+    with open(save_path,'rb') as f:
+        one_hot_encoder = pickle.load(f)
+
+    # same with MinMax scaler
+    save_folder = str(Path(__file__).parent.parent / "model/models")
+    filename = "min_max_scaler.pkl"
+    save_path = os.path.join(save_folder, filename)
+
+    scaler = None
+    with open(save_path,'rb') as f:
+        scaler = pickle.load(f)
+
+
+    # now we trasnform the data and concatenate and return it at the end
+    td_data = one_hot_encoder.transform(working_df[['time_of_day']])
+    other_data = scaler.transform(working_df.drop(columns=['time_of_day']))
+
+    return np.concatenate((other_data,td_data), axis=1)
