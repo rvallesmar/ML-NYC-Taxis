@@ -1,7 +1,7 @@
 import psycopg2
 from app import settings as config
 from app.db import Base
-from app.feedback.models import Feedback
+from app.feedback.models import Feedback, PredictionType
 from app.user.models import User
 from psycopg2.errors import DuplicateDatabase
 from sqlalchemy import create_engine
@@ -77,58 +77,73 @@ test_user = User(
     email="test@example.com",
 )
 
-# Create a dgallardo
-test_user_dga = User(
-    name="Douglas Gallardo",
-    password="Sofia2017",
-    email="dgallardo@example.com",
-)
-
 session.add(admin_user)
 session.add(test_user)
-session.add(test_user_dga)
 session.commit()
 print("Default users added")
 
-# Add some sample feedback entries
-sample_feedback = [
-    Feedback(
-        user_id=1,
-        predicted_fare=25.50,
-        predicted_duration=15.75,
-        actual_fare=26.00,
-        actual_duration=16.25,
-        pickup_location="40.7580,-73.9855",
-        dropoff_location="40.7278,-74.0031",
-        timestamp="2023-09-15 13:45:00",
-        rating=4
-    ),
-    Feedback(
-        user_id=1,
-        predicted_fare=15.25,
-        predicted_duration=10.50,
-        actual_fare=14.75,
-        actual_duration=9.90,
-        pickup_location="40.7580,-73.9855",
-        dropoff_location="40.7641,-73.9722",
-        timestamp="2023-09-15 14:30:00",
-        rating=5
-    ),
-    Feedback(
-        user_id=2,
-        predicted_fare=30.75,
-        predicted_duration=22.25,
-        actual_fare=32.50,
-        actual_duration=24.00,
-        pickup_location="40.7641,-73.9722",
-        dropoff_location="40.7061,-74.0086",
-        timestamp="2023-09-16 09:15:00",
-        rating=3
-    )
-]
+# Add some feedback entries for testing
+print("Populating database with sample feedback")
 
-for feedback in sample_feedback:
-    session.add(feedback)
+# Fare/duration feedback examples
+feedback1 = Feedback(
+    user_id=1,
+    prediction_type=PredictionType.FARE_DURATION,
+    predicted_fare=25.50,
+    predicted_duration=1200.0,  # 20 minutes in seconds
+    passenger_count=2,
+    trip_distance=3.5,
+    rating=4,
+    comment="Good prediction, but the ride was a bit more expensive than expected."
+)
+session.add(feedback1)
+
+feedback2 = Feedback(
+    user_id=1,
+    prediction_type=PredictionType.FARE_DURATION,
+    predicted_fare=15.75,
+    predicted_duration=900.0,  # 15 minutes in seconds
+    passenger_count=1,
+    trip_distance=2.2,
+    rating=5,
+    comment="Perfect prediction, thanks!"
+)
+session.add(feedback2)
+
+feedback3 = Feedback(
+    user_id=2,
+    prediction_type=PredictionType.FARE_DURATION,
+    predicted_fare=32.20,
+    predicted_duration=1500.0,  # 25 minutes in seconds
+    passenger_count=3,
+    trip_distance=4.8,
+    rating=3,
+    comment="The duration estimate was a bit off."
+)
+session.add(feedback3)
+
+# Demand feedback examples
+feedback4 = Feedback(
+    user_id=1,
+    prediction_type=PredictionType.DEMAND,
+    predicted_demand=25,
+    region_id=5,
+    date_hour="2023-09-15 14:30:00",
+    rating=5,
+    comment="Very accurate demand prediction for this region."
+)
+session.add(feedback4)
+
+feedback5 = Feedback(
+    user_id=2,
+    prediction_type=PredictionType.DEMAND,
+    predicted_demand=12,
+    region_id=3,
+    date_hour="2023-09-16 08:45:00",
+    rating=2,
+    comment="Demand was much higher than predicted."
+)
+session.add(feedback5)
 
 session.commit()
 print("Sample feedback entries added")

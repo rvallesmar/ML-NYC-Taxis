@@ -20,6 +20,7 @@ The system is built with these technologies:
 - PostgreSQL for user management and feedback storage
 - Scikit-learn, LightGBM, and XGBoost for predictive models
 - Docker and docker-compose for containerization
+- Google Maps API for geocoding and route visualization
 
 ## Installation
 
@@ -28,6 +29,8 @@ To run the services using docker-compose:
 ```bash
 $ cp .env.original .env
 ```
+
+**Important**: This application uses Google Maps API for geocoding addresses and visualizing routes. Please see `ui/GOOGLE_MAPS_API_SETUP.md` for instructions on how to set up your API key.
 
 ```bash
 $ docker network create shared_network
@@ -70,32 +73,9 @@ URL = http://localhost:9090
 - You can view taxi demand by region
 - You can provide feedback on prediction accuracy
 
-## Development Workflow
-
-### 1. Using Jupyter Notebooks
-
-The following Jupyter notebooks contain data exploration and model experimentation:
-- `data_exploration.ipynb`: Analyze and visualize the dataset
-- `model_training.ipynb`: Prototype and evaluate ML models
-- `model_evaluation.ipynb`: Evaluate model performance and interpret results
-
-To work with the notebooks:
-```bash
-$ pip install jupyter
-$ jupyter notebook
-```
-
-### 2. Code Style
-
-This project follows the [Black](https://black.readthedocs.io/) code style and uses [isort](https://pycqa.github.io/isort/) for import sorting.
-
-```bash
-$ isort --profile=black . && black --line-length 88 .
-```
-
 ## Tests
 
-To run tests:
+**Note: Test functionality is not implemented yet and is planned for future releases.**
 
 ### 1. Module Tests
 
@@ -129,6 +109,8 @@ $ python tests/test_integration.py
 
 ## Stress Testing
 
+**Note: Stress testing functionality is not implemented yet and is planned for future releases.**
+
 The project includes a Locust configuration for stress testing the API:
 
 ```bash
@@ -137,3 +119,4 @@ $ locust -f locustfile.py
 ```
 
 Then access the Locust UI at http://localhost:8089/ 
+ 

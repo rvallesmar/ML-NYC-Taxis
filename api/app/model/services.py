@@ -1,10 +1,15 @@
 import json
 import time
 from uuid import uuid4
+import logging
 
 import redis
 
-from .. import settings
+from app import settings
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Connect to Redis using settings from settings.py
 # This establishes connection to the same Redis broker used by the model service
@@ -28,8 +33,8 @@ async def predict_fare_duration(data):
 
     Returns
     -------
-    fare_amount, trip_duration, fare_score, duration_score : tuple
-        The predicted fare amount, trip duration, and confidence scores.
+    fare_amount, trip_duration : tuple
+        The predicted fare amount and trip duration.
     """
     # Generate a unique job ID with a prefix to identify the job type
     job_id = f"fare_duration:{str(uuid4())}"
@@ -39,6 +44,10 @@ async def predict_fare_duration(data):
         "id": job_id,
         "data": data
     }
+
+    logger.info(f"===== API SENDING PREDICTION REQUEST =====")
+    logger.info(f"Job ID: {job_id}")
+    logger.info(f"Input data: {data}")
 
     # Send the job to the model service using Redis lpush to the fare_duration queue
     db.lpush(settings.FARE_DURATION_QUEUE, json.dumps(job_data))
@@ -59,20 +68,24 @@ async def predict_fare_duration(data):
             # Extract prediction results
             fare_amount = output["fare_amount"]
             trip_duration = output["trip_duration"]
-            fare_score = output["fare_score"]
-            duration_score = output["duration_score"]
+
+            # Add detailed logging
+            logger.info(f"===== API RECEIVED PREDICTION RESULT =====")
+            logger.info(f"Job ID: {job_id}")
+            logger.info(f"Fare: ${fare_amount:.2f}, Duration: {trip_duration:.2f} seconds ({trip_duration/60:.1f} minutes)")
 
             # Clean up by deleting the job from Redis
             db.delete(job_id)
             
             # Return the prediction values
-            return fare_amount, trip_duration, fare_score, duration_score
+            return fare_amount, trip_duration
 
         # Sleep some time waiting for model results
         time.sleep(settings.API_SLEEP)
         retry_count += 1
 
     # If we reach here, prediction timed out
+    logger.error(f"Prediction timed out for job ID: {job_id}")
     raise TimeoutError("Prediction timed out. The model service might be unavailable.")
 
 
@@ -88,8 +101,8 @@ async def predict_demand(data):
 
     Returns
     -------
-    demand, demand_score : tuple
-        The predicted demand and confidence score.
+    demand : int
+        The predicted demand.
     """
     # Generate a unique job ID with a prefix to identify the job type
     job_id = f"demand:{str(uuid4())}"
@@ -118,13 +131,12 @@ async def predict_demand(data):
             
             # Extract prediction results
             demand = output["demand"]
-            demand_score = output["demand_score"]
 
             # Clean up by deleting the job from Redis
             db.delete(job_id)
             
             # Return the prediction values
-            return demand, demand_score
+            return demand
 
         # Sleep some time waiting for model results
         time.sleep(settings.API_SLEEP)
