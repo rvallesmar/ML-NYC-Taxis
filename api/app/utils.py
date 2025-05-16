@@ -4,58 +4,6 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 
-def validate_coordinates(latitude: float, longitude: float) -> bool:
-    """
-    Validates that latitude and longitude values are within valid ranges.
-    
-    Parameters
-    ----------
-    latitude : float
-        The latitude value to validate.
-    longitude : float
-        The longitude value to validate.
-        
-    Returns
-    -------
-    bool
-        True if both values are valid, False otherwise.
-    """
-    return -90 <= latitude <= 90 and -180 <= longitude <= 180
-
-
-def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """
-    Calculate the Haversine distance between two points.
-    
-    Parameters
-    ----------
-    lat1 : float
-        Latitude of the first point.
-    lon1 : float
-        Longitude of the first point.
-    lat2 : float
-        Latitude of the second point.
-    lon2 : float
-        Longitude of the second point.
-        
-    Returns
-    -------
-    float
-        Distance in kilometers.
-    """
-    # Convert coordinates from degrees to radians
-    lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
-    
-    # Haversine formula
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-    a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
-    c = 2 * np.arcsin(np.sqrt(a))
-    r = 6371  # Radius of Earth in kilometers
-    
-    return c * r
-
-
 def parse_datetime(datetime_str: str) -> Optional[datetime]:
     """
     Parse a datetime string into a datetime object.
@@ -111,13 +59,9 @@ def extract_features(data: Dict[str, Any]) -> Dict[str, Any]:
         features["pickup_month"] = pickup_datetime.month
         features["pickup_weekday"] = pickup_datetime.weekday()
     
-    # Calculate trip distance
-    if all(k in data for k in ["pickup_latitude", "pickup_longitude", 
-                               "dropoff_latitude", "dropoff_longitude"]):
-        features["trip_distance"] = calculate_distance(
-            data["pickup_latitude"], data["pickup_longitude"],
-            data["dropoff_latitude"], data["dropoff_longitude"]
-        )
+    # Use trip_distance directly from the input data (from Google API, in miles)
+    if "trip_distance" in data:
+        features["trip_distance"] = data["trip_distance"]
     
     # Include passenger count
     if "passenger_count" in data:

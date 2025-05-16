@@ -2,8 +2,14 @@ FROM python:3.8.13 as base
 
 ENV PYTHONPATH=$PYTHONPATH:/src/
 
-ADD requirements.txt .
-RUN pip3 install -r requirements.txt
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install requirements but exclude xgboost
+RUN pip3 install $(grep -v "xgboost" requirements.txt)
+
+# Install xgboost 1.6.1
+RUN pip3 install xgboost==1.6.1
 
 COPY ./ /src/
 

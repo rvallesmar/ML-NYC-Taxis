@@ -18,8 +18,8 @@ async def predict_fare_duration_endpoint(
     """
     Predict fare amount and trip duration for a taxi ride.
     
-    This endpoint takes the pickup and dropoff coordinates, number of passengers,
-    pickup datetime, and optional distance, and returns predicted fare and duration.
+    This endpoint takes the trip distance in miles, number of passengers,
+    and pickup datetime, and returns predicted fare and duration.
     """
     # Initialize response with success=False as default
     response = {"success": False}
@@ -31,14 +31,12 @@ async def predict_fare_duration_endpoint(
         
         # Call the predict_fare_duration service which handles Redis communication
         # This sends the job to the model service and waits for the result
-        fare_amount, trip_duration, fare_score, duration_score = await predict_fare_duration(data)
+        fare_amount, trip_duration = await predict_fare_duration(data)
         
         # Update response with prediction results
         response["success"] = True
         response["fare_amount"] = fare_amount
         response["trip_duration"] = trip_duration
-        response["fare_score"] = fare_score
-        response["duration_score"] = duration_score
         
     except TimeoutError as e:
         # Handle timeout errors specifically
@@ -81,12 +79,11 @@ async def predict_demand_endpoint(
         
         # Call the predict_demand service which handles Redis communication
         # This sends the job to the model service and waits for the result
-        demand, demand_score = await predict_demand(data)
+        demand = await predict_demand(data)
         
         # Update response with prediction results
         response["success"] = True
         response["demand"] = demand
-        response["demand_score"] = demand_score
         
     except TimeoutError as e:
         # Handle timeout errors specifically

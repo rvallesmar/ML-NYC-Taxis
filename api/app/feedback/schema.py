@@ -9,40 +9,65 @@ class FeedbackBase(BaseModel):
     
     Attributes
     ----------
-    predicted_fare : float
-        Predicted fare.
-    predicted_duration : float
-        Predicted duration in minutes.
-    actual_fare : float
-        Actual fare paid.
-    actual_duration : float
-        Actual duration in minutes.
-    pickup_location : str
-        Pickup location (latitude,longitude).
-    dropoff_location : str
-        Dropoff location (latitude,longitude).
     rating : int
         User rating of the prediction (1-5).
+    comment : Optional[str]
+        Optional comment from user about the prediction.
     """
-    predicted_fare: float
-    predicted_duration: float
-    actual_fare: float
-    actual_duration: float
-    pickup_location: str
-    dropoff_location: str
     rating: int = Field(..., ge=1, le=5)
+    comment: Optional[str] = None
 
 
-class FeedbackCreate(FeedbackBase):
+class FeedbackCreate(BaseModel):
     """
     Schema for creating feedback.
+    
+    Attributes
+    ----------
+    prediction_type : str
+        Type of prediction (fare_duration or demand)
+    rating : int
+        User rating of the prediction (1-5).
+    comment : Optional[str]
+        Optional comment from user.
+    
+    Fare/Duration specific fields:
+    predicted_fare : Optional[float]
+        Predicted fare amount.
+    predicted_duration : Optional[float]
+        Predicted trip duration in seconds.
+    passenger_count : Optional[int]
+        Number of passengers (1-4).
+    trip_distance : Optional[float]
+        Trip distance in miles.
+        
+    Demand specific fields:
+    predicted_demand : Optional[int]
+        Predicted demand amount.
+    region_id : Optional[int]
+        ID of the region.
+    date_hour : Optional[str]
+        Date and hour of the prediction.
     """
-    pass
+    prediction_type: str
+    rating: int = Field(..., ge=1, le=5)
+    comment: Optional[str] = None
+    
+    # Fare/Duration specific fields (Optional)
+    predicted_fare: Optional[float] = None
+    predicted_duration: Optional[float] = None
+    passenger_count: Optional[int] = None
+    trip_distance: Optional[float] = None
+    
+    # Demand specific fields (Optional)
+    predicted_demand: Optional[int] = None
+    region_id: Optional[int] = None
+    date_hour: Optional[str] = None
 
 
-class Feedback(FeedbackBase):
+class FeedbackResponse(BaseModel):
     """
-    Schema for feedback data.
+    Schema for feedback data with common fields.
     
     Attributes
     ----------
@@ -52,10 +77,30 @@ class Feedback(FeedbackBase):
         ID of the user who provided the feedback.
     timestamp : datetime
         When the feedback was submitted.
+    prediction_type : str
+        Type of prediction (fare_duration or demand)
+    rating : int
+        User rating of the prediction (1-5).
+    comment : Optional[str]
+        Optional user comment.
     """
     id: int
     user_id: int
     timestamp: datetime
+    prediction_type: str
+    rating: int
+    comment: Optional[str]
+    
+    # Fare/Duration specific fields (Optional)
+    predicted_fare: Optional[float] = None
+    predicted_duration: Optional[float] = None
+    passenger_count: Optional[int] = None
+    trip_distance: Optional[float] = None
+    
+    # Demand specific fields (Optional)
+    predicted_demand: Optional[int] = None
+    region_id: Optional[int] = None
+    date_hour: Optional[str] = None
     
     class Config:
         orm_mode = True
@@ -71,12 +116,6 @@ class FeedbackStats(BaseModel):
         Number of feedback entries.
     avg_rating : float
         Average rating.
-    fare_mae : float
-        Mean absolute error for fare predictions.
-    duration_mae : float
-        Mean absolute error for duration predictions.
     """
     feedback_count: int
-    avg_rating: float
-    fare_mae: float
-    duration_mae: float 
+    avg_rating: float 

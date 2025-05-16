@@ -12,3 +12,6 @@ PAGE_ICON = "🚕"
 # Map settings
 DEFAULT_MAP_LOCATION = [40.7831, -73.9712]  # NYC Central Park
 DEFAULT_ZOOM = 11 
+
+# Google Maps API settings
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", "") 
