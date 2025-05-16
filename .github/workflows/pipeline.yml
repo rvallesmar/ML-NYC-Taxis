@@ -63,6 +63,7 @@ jobs:
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
           ls -lah ec2-key.pem  # Verifica que el archivo se creó correctamente
 
+          echo "GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}" >> $GITHUB_WORKSPACE/aws/.env.original
           scp -i ec2-key.pem $GITHUB_WORKSPACE/aws/.env.original ubuntu@${{ secrets.EC2_HOST }}:~/app/.env
           scp -i ec2-key.pem $GITHUB_WORKSPACE/aws/docker-compose.yml ubuntu@${{ secrets.EC2_HOST }}:~/app/docker-compose.yml
 
